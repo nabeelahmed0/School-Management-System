@@ -1,0 +1,48 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6fb;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.connection-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  max-width: 500px;
+  width: 100%;
+}
+
+.connection-card h1 {
+  font-size: 26px;
+  color: #1e293b;
+  margin-bottom: 15px;
+}
+
+.connection-card p {
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.status {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: bold;
+}
