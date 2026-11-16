@@ -7,7 +7,9 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminLayout from "./layouts/AdminLayout.jsx";
+
+import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext";
 
 function HomeRedirect() {
@@ -30,9 +32,11 @@ function App() {
 
         <Route path="/" element={<HomeRedirect />} />
 
-        {/* Protected Admin Route */}
+        {/* Protected Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+          </Route>
         </Route>
 
         {/* Protected Teacher Route */}
@@ -45,6 +49,7 @@ function App() {
           <Route path="/student" element={<StudentDashboard />} />
         </Route>
 
+        {/* Unknown Routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
