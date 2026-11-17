@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDb from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import studentRoutes from "./src/routes/studentRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -15,6 +16,9 @@ app.use(
   }),
 );
 app.use("/api/auth", authRoutes);
+
+// Student Routes
+app.use("/api/students", studentRoutes);
 
 app.use(express.json());
 app.get("/", (req, res) => {

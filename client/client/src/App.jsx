@@ -11,6 +11,7 @@ import AdminLayout from "./layouts/AdminLayout.jsx";
 
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext";
+import Students from "./pages/Students.jsx";
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -36,6 +37,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
+            <Route path="students" element={<Students />} />
           </Route>
         </Route>
 
