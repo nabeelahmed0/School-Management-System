@@ -8,10 +8,19 @@ function Students() {
   const [classFilter, setClassFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
 
+  const [viewingStudent, setViewingStudent] = useState(null);
+
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editingStudent, setEditingStudent] = useState(null);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+
+  const limit = 10;
 
   const [formData, setFormData] = useState({
     admissionNumber: "",
@@ -27,13 +36,25 @@ function Students() {
   });
 
   // Fetch students from backend
+
   const fetchStudents = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/students");
+      const response = await api.get("/students", {
+        params: {
+          page,
+          limit,
+          search,
+          className: classFilter,
+          gender: genderFilter,
+        },
+      });
+
       setStudents(response.data.students || []);
+      setTotalStudents(response.data.totalStudents || 0);
+      setTotalPages(response.data.totalPages || 1);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load students.");
     } finally {
@@ -43,8 +64,7 @@ function Students() {
 
   useEffect(() => {
     fetchStudents();
-  }, []);
-
+  }, [page, search, classFilter, genderFilter]);
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,8 +125,6 @@ function Students() {
     }
   };
 
-  const [editingStudent, setEditingStudent] = useState(null);
-
   const handleEdit = (student) => {
     setEditingStudent(student);
 
@@ -146,24 +164,114 @@ function Students() {
       setSaving(false);
     }
   };
+  const handleView = (student) => {
+    setViewingStudent(student);
+  };
 
-  const filteredStudents = students.filter((student) => {
-    const searchValue = search.toLowerCase();
+  //   const filteredStudents = students.filter((student) => {
+  //     const searchValue = search.toLowerCase();
 
-    const matchesSearch =
-      student.name.toLowerCase().includes(searchValue) ||
-      (student.email || "").toLowerCase().includes(searchValue) ||
-      student.admissionNumber.toLowerCase().includes(searchValue);
+  //     const matchesSearch =
+  //       student.name.toLowerCase().includes(searchValue) ||
+  //       (student.email || "").toLowerCase().includes(searchValue) ||
+  //       student.admissionNumber.toLowerCase().includes(searchValue);
 
-    const matchesClass = !classFilter || student.className === classFilter;
+  //     const matchesClass = !classFilter || student.className === classFilter;
 
-    const matchesGender = !genderFilter || student.gender === genderFilter;
+  //     const matchesGender = !genderFilter || student.gender === genderFilter;
 
-    return matchesSearch && matchesClass && matchesGender;
-  });
+  //     return matchesSearch && matchesClass && matchesGender;
+  //   });
 
   return (
     <div className="students-page">
+      {viewingStudent && (
+        <div className="student-modal-overlay">
+          <div className="student-modal">
+            <div className="student-modal-header">
+              <div>
+                <h2>Student Details</h2>
+                <p>Complete student information</p>
+              </div>
+
+              <button onClick={() => setViewingStudent(null)}>
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="student-details-grid">
+              <div>
+                <label>Admission Number</label>
+                <p>{viewingStudent.admissionNumber}</p>
+              </div>
+
+              <div>
+                <label>Student Name</label>
+                <p>{viewingStudent.name}</p>
+              </div>
+
+              <div>
+                <label>Email</label>
+                <p>{viewingStudent.email || "—"}</p>
+              </div>
+
+              <div>
+                <label>Phone</label>
+                <p>{viewingStudent.phone}</p>
+              </div>
+
+              <div>
+                <label>Gender</label>
+                <p>{viewingStudent.gender}</p>
+              </div>
+
+              <div>
+                <label>Date of Birth</label>
+                <p>
+                  {viewingStudent.dateOfBirth
+                    ? new Date(viewingStudent.dateOfBirth).toLocaleDateString()
+                    : "—"}
+                </p>
+              </div>
+
+              <div>
+                <label>Class</label>
+                <p>{viewingStudent.className}</p>
+              </div>
+
+              <div>
+                <label>Status</label>
+                <p>{viewingStudent.status}</p>
+              </div>
+
+              <div>
+                <label>Guardian Name</label>
+                <p>{viewingStudent.guardianName}</p>
+              </div>
+
+              <div>
+                <label>Guardian Phone</label>
+                <p>{viewingStudent.guardianPhone}</p>
+              </div>
+
+              <div className="student-detail-full">
+                <label>Address</label>
+                <p>{viewingStudent.address}</p>
+              </div>
+            </div>
+
+            <div className="student-form-actions">
+              <button
+                className="cancel-student-btn"
+                onClick={() => setViewingStudent(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="students-header">
         <div>
           <h1>Students Management</h1>
@@ -203,12 +311,13 @@ function Students() {
                 <p>Enter the student's information below.</p>
               </div>
 
-              <button type="button" onClick={() => setShowForm(false)}>
-                <X size={22} />
-              </button>
+              {() => {
+                setShowForm(false);
+                setEditingStudent(null);
+              }}
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={editingStudent ? handleUpdate : handleSubmit}>
               <div className="student-form-grid">
                 <input
                   name="admissionNumber"
@@ -309,7 +418,11 @@ function Students() {
                   className="add-student-btn"
                   disabled={saving}
                 >
-                  {saving ? "Saving..." : "Save Student"}
+                  {saving
+                    ? "Saving..."
+                    : editingStudent
+                      ? "Update Student"
+                      : "Save Student"}{" "}
                 </button>
               </div>
             </form>
@@ -324,13 +437,19 @@ function Students() {
             <input
               placeholder="Search students..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
 
           <select
             value={classFilter}
-            onChange={(e) => setClassFilter(e.target.value)}
+            onChange={(e) => {
+              setClassFilter(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="">All Classes</option>
             {[...new Set(students.map((s) => s.className))].map((className) => (
@@ -342,7 +461,10 @@ function Students() {
 
           <select
             value={genderFilter}
-            onChange={(e) => setGenderFilter(e.target.value)}
+            onChange={(e) => {
+              setGenderFilter(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="">All Genders</option>
             <option value="Male">Male</option>
@@ -372,8 +494,8 @@ function Students() {
                     Loading students...
                   </td>
                 </tr>
-              ) : filteredStudents.length > 0 ? (
-                filteredStudents.map((student) => (
+              ) : students.length > 0 ? (
+                students.map((student) => (
                   <tr key={student._id}>
                     <td>{student.admissionNumber}</td>
                     <td>{student.name}</td>
@@ -389,10 +511,16 @@ function Students() {
                     </td>
                     <td>
                       <div className="student-actions">
-                        <button title="View">
+                        <button
+                          title="View"
+                          onClick={() => handleView(student)}
+                        >
                           <Eye size={17} />
                         </button>
-                        <button title="Edit">
+                        <button
+                          title="Edit"
+                          onClick={() => handleEdit(student)}
+                        >
                           <Pencil size={17} />
                         </button>
                         <button
@@ -416,6 +544,32 @@ function Students() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="students-pagination">
+        <p>
+          Showing {students.length} of {totalStudents} students
+        </p>
+
+        <div className="pagination-buttons">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((prev) => prev - 1)}
+          >
+            Previous
+          </button>
+
+          <span>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            disabled={page >= totalPages || totalStudents === 0}
+            onClick={() => setPage((prev) => prev + 1)}
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import connectDb from "./src/config/db.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import studentRoutes from "./src/routes/studentRoutes.js";
+import teacherRoutes from "./src/routes/teacherRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -19,6 +20,9 @@ app.use("/api/auth", authRoutes);
 
 // Student Routes
 app.use("/api/students", studentRoutes);
+
+// Teacher Routes
+app.use("/api/teachers", teacherRoutes);
 
 app.use(express.json());
 app.get("/", (req, res) => {
