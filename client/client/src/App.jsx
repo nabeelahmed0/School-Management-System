@@ -8,6 +8,7 @@ import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 
 import AdminLayout from "./layouts/AdminLayout.jsx";
+import Teachers from "./pages/Teachers.jsx";
 
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext";
@@ -38,6 +39,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="students" element={<Students />} />
+            <Route path="teachers" element={<Teachers />} />
           </Route>
         </Route>
 
