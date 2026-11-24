@@ -6,6 +6,7 @@ import Register from "./pages/Register.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
+import Classes from "./pages/Classes.jsx";
 
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import Teachers from "./pages/Teachers.jsx";
@@ -40,6 +41,7 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Teachers />} />
+            <Route path="classes" element={<Classes />} />
           </Route>
         </Route>
 
