@@ -9,6 +9,8 @@ import studentRoutes from "./src/routes/studentRoutes.js";
 import teacherRoutes from "./src/routes/teacherRoutes.js";
 import classRoutes from "./src/routes/classRoutes.js";
 
+import attendanceRoutes from "./src/routes/attendanceRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -33,6 +35,9 @@ app.use("/api/teachers", teacherRoutes);
 
 // Classes Routes
 app.use("/api/classes", classRoutes);
+
+//attendance Routes
+app.use("/api/attendance", attendanceRoutes);
 
 // Home Route
 app.get("/", (req, res) => {
