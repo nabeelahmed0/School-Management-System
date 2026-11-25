@@ -5,7 +5,6 @@ import {
   BookOpen,
   CalendarCheck,
   ClipboardList,
-  Settings,
   LogOut,
   School,
 } from "lucide-react";
@@ -43,15 +42,16 @@ function Sidebar() {
       path: "/admin/attendance",
       icon: CalendarCheck,
     },
+
+    {
+      name: "Attendance Records",
+      path: "/admin/attendance-records",
+      icon: ClipboardList,
+    },
     {
       name: "Examinations",
       path: "/admin/examinations",
       icon: ClipboardList,
-    },
-    {
-      name: "Settings",
-      path: "/admin/settings",
-      icon: Settings,
     },
   ];
 
@@ -64,7 +64,9 @@ function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-logo">
         <School size={30} />
-        <h2>School<span>MS</span></h2>
+        <h2>
+          School<span>MS</span>
+        </h2>
       </div>
 
       <p className="menu-heading">MAIN MENU</p>

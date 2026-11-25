@@ -1,4 +1,3 @@
-
 import Attendance from "../models/Attendance.js";
 import Student from "../models/Student.js";
 import SchoolClass from "../models/Class.js";
@@ -33,11 +32,19 @@ export const getStudentsForAttendance = async (req, res) => {
 };
 
 // POST: Save attendance
+
 export const saveAttendance = async (req, res) => {
   try {
     const { className, section, academicYear, date, students } = req.body;
 
-    if (!className || !section || !academicYear || !date || !Array.isArray(students) || students.length === 0) {
+    if (
+      !className ||
+      !section ||
+      !academicYear ||
+      !date ||
+      !Array.isArray(students) ||
+      students.length === 0
+    ) {
       return res.status(400).json({
         message: "All attendance fields are required",
       });
@@ -56,7 +63,7 @@ export const saveAttendance = async (req, res) => {
       });
     }
 
-    const normalizedDate = new Date(date);
+    const normalizedDate = new Date(`${date}T00:00:00.000Z`);
 
     if (Number.isNaN(normalizedDate.getTime())) {
       return res.status(400).json({
@@ -99,10 +106,7 @@ export const saveAttendance = async (req, res) => {
         className,
         section,
         academicYear,
-        date: {
-          $gte: new Date(normalizedDate.setUTCHours(0, 0, 0, 0)),
-          $lt: new Date(normalizedDate.setUTCHours(24, 0, 0, 0)),
-        },
+        date: normalizedDate,
       },
       {
         $set: {
@@ -113,22 +117,25 @@ export const saveAttendance = async (req, res) => {
         new: true,
         upsert: true,
         runValidators: true,
-      }
+        setDefaultsOnInsert: true,
+      },
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Attendance saved successfully",
       attendance,
     });
   } catch (error) {
+    console.error("Save Attendance Error:", error);
+
     if (error.code === 11000) {
       return res.status(409).json({
-        message: "Attendance already exists. Please try again.",
+        message: "Attendance record conflict. Please try again.",
       });
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message,
     });
   }
@@ -192,6 +199,169 @@ export const updateAttendance = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// GET: All Attendance Records with Search, Filters and Pagination
+export const getAttendanceRecords = async (req, res) => {
+  try {
+    const {
+      className,
+      section,
+      date,
+      status,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const currentPage = Math.max(1, parseInt(page) || 1);
+    const pageLimit = Math.min(100, Math.max(1, parseInt(limit) || 10));
+
+    const filter = {};
+
+    if (className) {
+      filter.className = className;
+    }
+
+    if (section) {
+      filter.section = section;
+    }
+
+    if (date) {
+      const selectedDate = new Date(date);
+
+      if (Number.isNaN(selectedDate.getTime())) {
+        return res.status(400).json({
+          message: "Invalid date",
+        });
+      }
+
+      const startDate = new Date(selectedDate);
+      startDate.setUTCHours(0, 0, 0, 0);
+
+      const endDate = new Date(startDate);
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
+
+      filter.date = {
+        $gte: startDate,
+        $lt: endDate,
+      };
+    }
+
+    if (status) {
+      if (!["Present", "Absent", "Late", "Leave"].includes(status)) {
+        return res.status(400).json({
+          message: "Invalid attendance status",
+        });
+      }
+
+      filter["students.status"] = status;
+    }
+
+    const totalRecords = await Attendance.countDocuments(filter);
+
+    const records = await Attendance.find(filter)
+      .populate("students.student", "name admissionNumber")
+      .sort({ date: -1 })
+      .skip((currentPage - 1) * pageLimit)
+      .limit(pageLimit);
+
+    res.status(200).json({
+      success: true,
+      totalRecords,
+      currentPage,
+      totalPages: Math.ceil(totalRecords / pageLimit),
+      limit: pageLimit,
+      records,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+// GET: Attendance Summary
+export const getAttendanceSummary = async (req, res) => {
+  try {
+    const { className, section, academicYear, date } = req.query;
+
+    if (!className || !section || !academicYear || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "Class, section, academic year and date are required",
+      });
+    }
+
+    const selectedDate = new Date(date);
+
+    if (Number.isNaN(selectedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date",
+      });
+    }
+
+    // Selected day's UTC date range
+    const startDate = new Date(selectedDate);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + 1);
+
+    // Count active students in this class
+    const totalStudents = await Student.countDocuments({
+      className,
+      section,
+      status: "Active",
+    });
+
+    // Find attendance record for selected date
+    const attendance = await Attendance.findOne({
+      className,
+      section,
+      academicYear,
+      date: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+    let leave = 0;
+
+    if (attendance) {
+      attendance.students.forEach((item) => {
+        if (item.status === "Present") present++;
+        else if (item.status === "Absent") absent++;
+        else if (item.status === "Late") late++;
+        else if (item.status === "Leave") leave++;
+      });
+    }
+
+    // Present + Late count as attended
+    const attendancePercentage =
+      totalStudents > 0
+        ? Number((((present + late) / totalStudents) * 100).toFixed(2))
+        : 0;
+
+    res.status(200).json({
+      success: true,
+      summary: {
+        totalStudents,
+        present,
+        absent,
+        late,
+        leave,
+        attendancePercentage,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
       message: error.message,
     });
   }

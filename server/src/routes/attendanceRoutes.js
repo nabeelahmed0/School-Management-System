@@ -4,17 +4,15 @@ import {
   getStudentsForAttendance,
   saveAttendance,
   updateAttendance,
+  getAttendanceRecords,
+  getAttendanceSummary,
 } from "../controllers/attendanceController.js";
-
 const router = express.Router();
 
-// Get students for attendance
 router.get("/students", getStudentsForAttendance);
-
-// Save attendance
+router.get("/records", getAttendanceRecords);
+router.get("/summary", getAttendanceSummary);
 router.post("/", saveAttendance);
-
-// Update attendance
 router.put("/:id", updateAttendance);
 
 export default router;

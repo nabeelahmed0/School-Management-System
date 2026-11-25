@@ -11,6 +11,9 @@ import Classes from "./pages/Classes.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import Teachers from "./pages/Teachers.jsx";
 
+import Attendance from "./pages/Attendance.jsx";
+import AttendanceRecords from "./pages/AttendanceRecords.jsx";
+
 import ProtectedRoute from "./layouts/ProtectedRoute.jsx";
 import { useAuth } from "./context/AuthContext";
 import Students from "./pages/Students.jsx";
@@ -42,6 +45,8 @@ function App() {
             <Route path="students" element={<Students />} />
             <Route path="teachers" element={<Teachers />} />
             <Route path="classes" element={<Classes />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="attendance-records" element={<AttendanceRecords />} />
           </Route>
         </Route>
 
